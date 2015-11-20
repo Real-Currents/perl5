@@ -611,10 +611,11 @@ static const scan_data_t zero_scan_data =
 /*
  * Like Simple_vFAIL(), but accepts two arguments.
  */
-#define	Simple_vFAIL2(m,a1) STMT_START {			\
-    const IV offset = RExC_parse - RExC_precomp;			\
-    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1,			\
-                      REPORT_LOCATION_ARGS(offset));	\
+#define	Simple_vFAIL2(m,a1) STMT_START {			            \
+    const IV offset                                                         \
+          = (RExC_parse > RExC_end ? RExC_end : RExC_parse) - RExC_precomp; \
+    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1,		            \
+                      REPORT_LOCATION_ARGS(offset));	                    \
 } STMT_END
 
 /*
@@ -630,10 +631,11 @@ static const scan_data_t zero_scan_data =
 /*
  * Like Simple_vFAIL(), but accepts three arguments.
  */
-#define	Simple_vFAIL3(m, a1, a2) STMT_START {			\
-    const IV offset = RExC_parse - RExC_precomp;		\
-    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2,		\
-	    REPORT_LOCATION_ARGS(offset));	\
+#define	Simple_vFAIL3(m, a1, a2) STMT_START {                               \
+    const IV offset                                                         \
+          = (RExC_parse > RExC_end ? RExC_end : RExC_parse) - RExC_precomp; \
+    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2,                      \
+                      REPORT_LOCATION_ARGS(offset));                        \
 } STMT_END
 
 /*
@@ -648,10 +650,11 @@ static const scan_data_t zero_scan_data =
 /*
  * Like Simple_vFAIL(), but accepts four arguments.
  */
-#define	Simple_vFAIL4(m, a1, a2, a3) STMT_START {		\
-    const IV offset = RExC_parse - RExC_precomp;		\
-    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2, a3,		\
-	    REPORT_LOCATION_ARGS(offset));	\
+#define	Simple_vFAIL4(m, a1, a2, a3) STMT_START {		            \
+    const IV offset                                                         \
+          = (RExC_parse > RExC_end ? RExC_end : RExC_parse) - RExC_precomp; \
+    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2, a3,                  \
+                      REPORT_LOCATION_ARGS(offset));                        \
 } STMT_END
 
 #define	vFAIL4(m,a1,a2,a3) STMT_START {			\
@@ -661,20 +664,22 @@ static const scan_data_t zero_scan_data =
 } STMT_END
 
 /* A specialized version of vFAIL2 that works with UTF8f */
-#define vFAIL2utf8f(m, a1) STMT_START {            \
-    const IV offset = RExC_parse - RExC_precomp;   \
-    if (!SIZE_ONLY)                                \
-        SAVEFREESV(RExC_rx_sv);                    \
-    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, \
-            REPORT_LOCATION_ARGS(offset));         \
+#define vFAIL2utf8f(m, a1) STMT_START {                                     \
+    const IV offset                                                         \
+          = (RExC_parse > RExC_end ? RExC_end : RExC_parse) - RExC_precomp; \
+    if (!SIZE_ONLY)                                                         \
+        SAVEFREESV(RExC_rx_sv);                                             \
+    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1,                          \
+            REPORT_LOCATION_ARGS(offset));                                  \
 } STMT_END
 
-#define vFAIL3utf8f(m, a1, a2) STMT_START {             \
-    const IV offset = RExC_parse - RExC_precomp;        \
-    if (!SIZE_ONLY)                                     \
-        SAVEFREESV(RExC_rx_sv);                         \
-    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2,  \
-            REPORT_LOCATION_ARGS(offset));              \
+#define vFAIL3utf8f(m, a1, a2) STMT_START {                                 \
+    const IV offset                                                         \
+          = (RExC_parse > RExC_end ? RExC_end : RExC_parse) - RExC_precomp; \
+    if (!SIZE_ONLY)                                                         \
+        SAVEFREESV(RExC_rx_sv);                                             \
+    S_re_croak2(aTHX_ UTF, m, REPORT_LOCATION, a1, a2,                      \
+            REPORT_LOCATION_ARGS(offset));                                  \
 } STMT_END
 
 /* These have asserts in them because of [perl #122671] Many warnings in
@@ -7949,8 +7954,8 @@ S_reg_scan_name(pTHX_ RExC_state_t *pRExC_state, U32 flags)
 		RExC_parse++;
 	    } while (isWORDCHAR(*RExC_parse));
     } else {
-        RExC_parse++; /* so the <- from the vFAIL is after the offending
-                         character */
+        /* so the <- from the vFAIL is after the offending character */
+        RExC_parse += SKIP_IF_CHAR(RExC_parse);
         vFAIL("Group name must start with a non-digit word character");
     }
     if ( flags ) {
@@ -9952,7 +9957,7 @@ S_reg(pTHX_ RExC_state_t *pRExC_state, I32 paren, I32 *flagp,U32 depth)
                 break;
 	    }
 	    if ( ! op ) {
-	        RExC_parse += UTF ? UTF8SKIP(RExC_parse) : 1;
+                RExC_parse += SKIP_IF_CHAR(RExC_parse);
                 vFAIL2utf8f(
                     "Unknown verb pattern '%"UTF8f"'",
                     UTF8fARG(UTF, verb_len, start_verb));
@@ -9989,7 +9994,7 @@ S_reg(pTHX_ RExC_state_t *pRExC_state, I32 paren, I32 *flagp,U32 depth)
 	    const char * const seqstart = RExC_parse;
             const char * endptr;
             if (has_intervening_patws) {
-                RExC_parse++;
+                RExC_parse += SKIP_IF_CHAR(RExC_parse);
                 vFAIL("In '(?...)', the '(' and '?' must be adjacent");
             }
 
@@ -10249,7 +10254,7 @@ S_reg(pTHX_ RExC_state_t *pRExC_state, I32 paren, I32 *flagp,U32 depth)
                 ret = reg2Lanode(pRExC_state, GOSUB, num, RExC_recurse_count);
                 if (!SIZE_ONLY) {
 		    if (num > (I32)RExC_rx->nparens) {
-			RExC_parse++;
+                        RExC_parse += SKIP_IF_CHAR(RExC_parse);
 			vFAIL("Reference to nonexistent group");
 	            }
 	            RExC_recurse_count++;
@@ -10439,7 +10444,7 @@ S_reg(pTHX_ RExC_state_t *pRExC_state, I32 paren, I32 *flagp,U32 depth)
 
                  insert_if_check_paren:
 		    if (UCHARAT(RExC_parse) != ')') {
-                        RExC_parse += UTF ? UTF8SKIP(RExC_parse) : 1;
+                        RExC_parse += SKIP_IF_CHAR(RExC_parse);
 			vFAIL("Switch condition not recognized");
 		    }
 		    nextchar(pRExC_state);
@@ -10502,7 +10507,7 @@ S_reg(pTHX_ RExC_state_t *pRExC_state, I32 paren, I32 *flagp,U32 depth)
                                     but I can't figure out why. -- dmq*/
 		    return ret;
 		}
-                RExC_parse += UTF ? UTF8SKIP(RExC_parse) : 1;
+                RExC_parse += SKIP_IF_CHAR(RExC_parse);
                 vFAIL("Unknown switch condition (?(...))");
 	    }
 	    case '[':           /* (?[ ... ]) */
@@ -13984,7 +13989,7 @@ redo_curchar:
                 break;
 
             default:
-                RExC_parse += (UTF) ? UTF8SKIP(RExC_parse) : 1;
+                RExC_parse += SKIP_IF_CHAR(RExC_parse);
                 vFAIL("Unexpected character");
 
           handle_operand:
@@ -14915,7 +14920,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 		    RExC_parse += numlen;
                     if (numlen != 3) {
                         if (strict) {
-                            RExC_parse += (UTF) ? UTF8SKIP(RExC_parse) : 1;
+                            RExC_parse += SKIP_IF_CHAR(RExC_parse);
                             vFAIL("Need exactly 3 octal digits");
                         }
                         else if (! SIZE_ONLY /* like \08, \178 */
