@@ -14391,7 +14391,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 
     /* inversion list of code points this node matches only when the target
      * string is in UTF-8.  (Because is under /d) */
-    SV* depends_list = NULL;
+    SV* if_utf8_list = NULL;
 
     /* Inversion list of code points this node matches regardless of things
      * like locale, folding, utf8ness of the target string */
@@ -14803,10 +14803,10 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                         /* We don't know yet, so have to assume that the
                          * property could match something in the upper Latin1
                          * range, hence something that isn't utf8.  Note that
-                         * this would cause things in <depends_list> to match
+                         * this would cause things in <if_utf8_list> to match
                          * inappropriately, except that any \p{}, including
                          * this one forces Unicode semantics, which means there
-                         * is no <depends_list> */
+                         * is no <if_utf8_list> */
                         ANYOF_FLAGS(ret)
                                       |= ANYOF_HAS_NONBITMAP_NON_UTF8_MATCHES;
                     }
@@ -15806,8 +15806,8 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                                                             PL_fold_latin1[j]);
                             }
                             else {
-                                depends_list =
-                                 add_cp_to_invlist(depends_list,
+                                if_utf8_list =
+                                 add_cp_to_invlist(if_utf8_list,
                                                    PL_fold_latin1[j]);
                             }
                         }
@@ -15872,7 +15872,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                             else {
                                 /* Similarly folds involving non-ascii Latin1
                                 * characters under /d are added to their list */
-                                depends_list = add_cp_to_invlist(depends_list,
+                                if_utf8_list = add_cp_to_invlist(if_utf8_list,
                                                                  c);
                             }
                         }
@@ -15949,13 +15949,13 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                 cp_list = posixes;
             }
 
-            if (depends_list) {
-                _invlist_union(depends_list, nonascii_but_latin1_properties,
-                               &depends_list);
+            if (if_utf8_list) {
+                _invlist_union(if_utf8_list, nonascii_but_latin1_properties,
+                               &if_utf8_list);
                 SvREFCNT_dec_NN(nonascii_but_latin1_properties);
             }
             else {
-                depends_list = nonascii_but_latin1_properties;
+                if_utf8_list = nonascii_but_latin1_properties;
             }
         }
     }
@@ -15969,7 +15969,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
      * class that isn't a Unicode property, and which matches above Unicode, \W
      * or [\x{110000}] for example.
      * (Note that in this case, unlike the Posix one above, there is no
-     * <depends_list>, because having a Unicode property forces Unicode
+     * <if_utf8_list>, because having a Unicode property forces Unicode
      * semantics */
     if (properties) {
         if (cp_list) {
@@ -16038,7 +16038,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
     if (cp_list
         && invert
         && ! (ANYOF_FLAGS(ret) & (ANYOF_LOCALE_FLAGS))
-	&& ! depends_list
+	&& ! if_utf8_list
 	&& ! HAS_NONLOCALE_RUNTIME_PROPERTY_DEFINITION)
     {
         _invlist_invert(cp_list);
@@ -16087,7 +16087,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
      * space).  _invlistEQ() could be used if one ever wanted to do something
      * like this at this point in the code */
 
-    if (optimizable && cp_list && ! invert && ! depends_list) {
+    if (optimizable && cp_list && ! invert && ! if_utf8_list) {
         UV start, end;
         U8 op = END;  /* The optimzation node-type */
         const char * cur_parse= RExC_parse;
@@ -16209,14 +16209,14 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 
     /* Here, the bitmap has been populated with all the Latin1 code points that
      * always match.  Can now add to the overall list those that match only
-     * when the target string is UTF-8 (<depends_list>). */
-    if (depends_list) {
+     * when the target string is UTF-8 (<if_utf8_list>). */
+    if (if_utf8_list) {
 	if (cp_list) {
-	    _invlist_union(cp_list, depends_list, &cp_list);
-	    SvREFCNT_dec_NN(depends_list);
+	    _invlist_union(cp_list, if_utf8_list, &cp_list);
+	    SvREFCNT_dec_NN(if_utf8_list);
 	}
 	else {
-	    cp_list = depends_list;
+	    cp_list = if_utf8_list;
 	}
         ANYOF_FLAGS(ret) |= ANYOF_HAS_UTF8_NONBITMAP_MATCHES;
     }
