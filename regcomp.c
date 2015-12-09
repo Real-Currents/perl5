@@ -14391,7 +14391,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 
     /* inversion list of code points this node matches only when the target
      * string is in UTF-8.  (Because is under /d) */
-    SV* if_utf8_list = NULL;
+    SV* only_utf8_list = NULL;
 
     /* Inversion list of code points this node matches regardless of things
      * like locale, folding, utf8ness of the target string */
@@ -14444,9 +14444,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
     ret = reganode(pRExC_state,
                    (LOC)
                     ? ANYOFL
-                    : (DEPENDS_SEMANTICS)
-                      ? ANYOFD
-                      : ANYOF,
+                    : ANYOF,
                    0);
 
     if (SIZE_ONLY) {
@@ -14803,10 +14801,10 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                         /* We don't know yet, so have to assume that the
                          * property could match something in the upper Latin1
                          * range, hence something that isn't utf8.  Note that
-                         * this would cause things in <if_utf8_list> to match
+                         * this would cause things in <only_utf8_list> to match
                          * inappropriately, except that any \p{}, including
                          * this one forces Unicode semantics, which means there
-                         * is no <if_utf8_list> */
+                         * is no <only_utf8_list> */
                         ANYOF_FLAGS(ret)
                                       |= ANYOF_HAS_NONBITMAP_NON_UTF8_MATCHES;
                     }
@@ -15464,6 +15462,8 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 	STRLEN len;
 	char *save_end = RExC_end;
 	char *save_parse = RExC_parse;
+        char * save_precomp = RExC_precomp;
+        STRLEN offset_to_original_portion = 0;
         bool first_time = TRUE;     /* First multi-char occurrence doesn't get
                                        a "|" */
         I32 reg_flags;
@@ -15502,6 +15502,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
          * multi-character folds, have to include it in recursive parsing */
         if (element_count) {
             sv_catpv(substitute_parse, "|[");
+            offset_to_original_portion = SvCUR(substitute_parse) - 1;
             sv_catpvn(substitute_parse, orig_parse, RExC_parse - orig_parse);
             sv_catpv(substitute_parse, "]");
         }
@@ -15517,6 +15518,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 #endif
 
 	RExC_parse = SvPV(substitute_parse, len);
+        RExC_precomp = RExC_parse + offset_to_original_portion;
 	RExC_end = RExC_parse + len;
         RExC_in_multi_char_class = 1;
 	RExC_override_recoding = 1;
@@ -15528,6 +15530,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 
 	RExC_parse = save_parse;
 	RExC_end = save_end;
+        RExC_precomp = save_precomp;
 	RExC_in_multi_char_class = 0;
 	RExC_override_recoding = 0;
         SvREFCNT_dec_NN(multi_char_matches);
@@ -15806,8 +15809,8 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                                                             PL_fold_latin1[j]);
                             }
                             else {
-                                if_utf8_list =
-                                 add_cp_to_invlist(if_utf8_list,
+                                only_utf8_list =
+                                 add_cp_to_invlist(only_utf8_list,
                                                    PL_fold_latin1[j]);
                             }
                         }
@@ -15872,8 +15875,8 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                             else {
                                 /* Similarly folds involving non-ascii Latin1
                                 * characters under /d are added to their list */
-                                if_utf8_list = add_cp_to_invlist(if_utf8_list,
-                                                                 c);
+                                only_utf8_list
+                                        = add_cp_to_invlist(only_utf8_list, c);
                             }
                         }
                     }
@@ -15949,13 +15952,13 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                 cp_list = posixes;
             }
 
-            if (if_utf8_list) {
-                _invlist_union(if_utf8_list, nonascii_but_latin1_properties,
-                               &if_utf8_list);
+            if (only_utf8_list) {
+                _invlist_union(only_utf8_list, nonascii_but_latin1_properties,
+                               &only_utf8_list);
                 SvREFCNT_dec_NN(nonascii_but_latin1_properties);
             }
             else {
-                if_utf8_list = nonascii_but_latin1_properties;
+                only_utf8_list = nonascii_but_latin1_properties;
             }
         }
     }
@@ -15969,7 +15972,7 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
      * class that isn't a Unicode property, and which matches above Unicode, \W
      * or [\x{110000}] for example.
      * (Note that in this case, unlike the Posix one above, there is no
-     * <if_utf8_list>, because having a Unicode property forces Unicode
+     * <only_utf8_list>, because having a Unicode property forces Unicode
      * semantics */
     if (properties) {
         if (cp_list) {
@@ -16031,14 +16034,53 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
         }
     }
 
+#define MATCHES_ALL_NON_UTF8_NON_ASCII(ret)                                 \
+    (   DEPENDS_SEMANTICS                                                   \
+     && ANYOF_FLAGS(ret)                                                    \
+        & ANYOF_SHARED_d_MATCHES_ALL_NON_UTF8_NON_ASCII_non_d_WARN_SUPER)
+
+    if (only_utf8_list || MATCHES_ALL_NON_UTF8_NON_ASCII(ret)) {
+        if (only_utf8_list) {
+            if (MATCHES_ALL_NON_UTF8_NON_ASCII(ret)) {
+                /* Here, 'only_utf8_list' contains the chars that match only if
+                 * the target string will be UTF-8.  These chars are all in the
+                 * range 0x80-0xFF (or their EBCDIC equivalents).  Further, the
+                 * flag indicates that everything in 0x80-0xFF will match when
+                 * NOT under UTF-8.  Therefore the ones in 'only_utf8_list'
+                 * match regardless of UTF-8, so can be added to the regular
+                 * list, and the 'only_utf8_list' cleared */
+                _invlist_union(cp_list, only_utf8_list, &cp_list);
+                only_utf8_list = NULL;
+            }
+            else if (cp_list) {
+
+                /* Here, we have chars that always match, and chars that were
+                 * specified to match only if the target string is in UTF-8.
+                 * It may be that the additional criteria have made some or all
+                 * of these conditional ones unconditional.  So subtract those
+                 * to make the conditional list as small as possible, perhaps
+                 * even clearing it, in which case more optimizations are
+                 * possible later */
+                _invlist_subtract(only_utf8_list, cp_list, &only_utf8_list);
+            }
+        }
+
+        /* If we still have conditional matching, we change the regnode type to
+         * indicate that */
+        if (only_utf8_list || MATCHES_ALL_NON_UTF8_NON_ASCII(ret)) {
+            OP(ret) = ANYOFD;
+            optimizable = FALSE;
+        }
+    }
+
     /* Optimize inverted simple patterns (e.g. [^a-z]) when everything is known
      * at compile time.  Besides not inverting folded locale now, we can't
      * invert if there are things such as \w, which aren't known until runtime
      * */
     if (cp_list
         && invert
+        && OP(ret) != ANYOFD
         && ! (ANYOF_FLAGS(ret) & (ANYOF_LOCALE_FLAGS))
-	&& ! if_utf8_list
 	&& ! HAS_NONLOCALE_RUNTIME_PROPERTY_DEFINITION)
     {
         _invlist_invert(cp_list);
@@ -16081,15 +16123,16 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
      * expensive run-time swashes can be avoided.  Now that we have more
      * complete information, we can find things necessarily missed by the
      * earlier code.  I (khw) did some benchmarks and found essentially no
-     * speed difference between using a POSIXA node versus an ANYOF node, so
+     * speed difference between using a XXX POSIXA node versus an ANYOF node, so
      * there is no reason to optimize, for example [A-Za-z0-9_] into
      * [[:word:]]/a (although if we did it in the sizing pass it would save
      * space).  _invlistEQ() could be used if one ever wanted to do something
      * like this at this point in the code */
 
-    if (optimizable && cp_list && ! invert && ! if_utf8_list) {
+    if (optimizable && cp_list && ! invert) {
         UV start, end;
         U8 op = END;  /* The optimzation node-type */
+        int posix_class;
         const char * cur_parse= RExC_parse;
 
         invlist_iterinit(cp_list);
@@ -16172,6 +16215,30 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
         }
         invlist_iterfinish(cp_list);
 
+        if (op == END) {
+            for (posix_class = 0;
+                 posix_class <= _HIGHEST_REGCOMP_DOT_H_SYNC;
+                 posix_class++)
+            {
+                int try_inverted;
+                for (try_inverted = 0; try_inverted < 2; try_inverted++) {
+                    if (_invlistEQ(cp_list,
+                                   PL_XPosix_ptrs[posix_class],
+                                   try_inverted))
+                    {
+                        op = (posix_class == _CC_ASCII)
+                             ? ((try_inverted)
+                                ? NPOSIXA
+                                : POSIXA)
+                             : (try_inverted)
+                               ? NPOSIXU
+                               : POSIXU;
+                        goto found_posix;
+                    }
+                }
+            }
+      found_posix: ;
+        }
         if (op != END) {
             RExC_parse = (char *)orig_parse;
             RExC_emit = (regnode *)orig_emit;
@@ -16188,6 +16255,9 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
                 alloc_maybe_populate_EXACT(pRExC_state, ret, flagp, 0, value,
                                            TRUE /* downgradable to EXACT */
                                           );
+            }
+            else if (PL_regkind[op] == POSIXD || PL_regkind[op] == NPOSIXD) {
+                FLAGS(ret) = posix_class;
             }
 
             SvREFCNT_dec_NN(cp_list);
@@ -16209,14 +16279,14 @@ S_regclass(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 depth,
 
     /* Here, the bitmap has been populated with all the Latin1 code points that
      * always match.  Can now add to the overall list those that match only
-     * when the target string is UTF-8 (<if_utf8_list>). */
-    if (if_utf8_list) {
+     * when the target string is UTF-8 (<only_utf8_list>). */
+    if (only_utf8_list) {
 	if (cp_list) {
-	    _invlist_union(cp_list, if_utf8_list, &cp_list);
-	    SvREFCNT_dec_NN(if_utf8_list);
+	    _invlist_union(cp_list, only_utf8_list, &cp_list);
+	    SvREFCNT_dec_NN(only_utf8_list);
 	}
 	else {
-	    cp_list = if_utf8_list;
+	    cp_list = only_utf8_list;
 	}
         ANYOF_FLAGS(ret) |= ANYOF_HAS_UTF8_NONBITMAP_MATCHES;
     }
@@ -17351,6 +17421,13 @@ Perl_regprop(pTHX_ const regexp *prog, SV *sv, const regnode *o, const regmatch_
                     if (*s == '\n') {
                         const char * const t = ++s;
 
+                        /* Allow user to override the default truncation length */
+                        UV dump_len = 256;
+                        char * env_dump_len = PerlEnv_getenv("PERL_DUMP_RE_MAX_LEN");
+                        if (env_dump_len) {
+                            (void) grok_atoUV(env_dump_len, &dump_len, NULL);
+                        }
+
                         if (flags & ANYOF_HAS_NONBITMAP_NON_UTF8_MATCHES) {
                             sv_catpvs(sv, "{outside bitmap}");
                         }
@@ -17366,7 +17443,7 @@ Perl_regprop(pTHX_ const regexp *prog, SV *sv, const regnode *o, const regmatch_
                             if (*s == '\n') {
 
                                 /* Truncate very long output */
-                                if (s - origs > 256) {
+                                if ((UV) (s - origs) > dump_len) {
                                     Perl_sv_catpvf(aTHX_ sv,
                                                 "%.*s...",
                                                 (int) (s - origs - 1),
