@@ -27,7 +27,7 @@
 # newly built perl.
 #
 INST_DRV	*= c:
-INST_TOP	*= $(INST_DRV)\perl
+INST_TOP	*= $(INST_DRV)\perl5
 
 #
 # Uncomment if you want to build a 32-bit Perl using a 32-bit compiler
@@ -139,7 +139,8 @@ USE_LARGE_FILES	*= define
 # Visual C++ 2013 Express Edition (aka Visual C++ 12.x) (free version)
 #CCTYPE		= MSVC120FREE
 # MinGW or mingw-w64 with gcc-3.4.5 or later
-CCTYPE		*= GCC
+#CCTYPE		*= GCC
+CCTYPE = MSVC140
 
 #
 # If you are using GCC, 4.3 or later by default we add the -fwrapv option.
@@ -227,7 +228,7 @@ CCTYPE		*= GCC
 # not be quoted)
 #
 .IF "$(CCTYPE)" == "GCC"
-CCHOME		*= C:\MinGW
+CCHOME		*= C:\VC
 .ELSE
 CCHOME		*= $(MSVCDIR)
 .ENDIF
@@ -257,6 +258,8 @@ CCDLLDIR *= $(CCHOME)\bin
 # Additional compiler flags can be specified here.
 #
 BUILDOPT	*= $(BUILDOPTEXTRA)
+
+BUILDOPT    += -Duseshrplib -Duseithreads -Dusethreads -Accflags='-fPIC'
 
 #
 # This should normally be disabled.  Enabling it will disable the File::Glob
