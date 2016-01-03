@@ -715,7 +715,7 @@ MICROCORE_SRC	=		\
 		..\dump.c	\
 		..\globals.c	\
 		..\gv.c		\
-		..\mro.c	\
+		..\mro_core.c	\
 		..\hv.c		\
 		..\locale.c	\
 		..\keywords.c	\
@@ -1088,28 +1088,28 @@ $(PERLSTATICLIB): Extensions_static
 
 $(PERLEXE_RES): perlexe.rc $(PERLEXE_MANIFEST) $(PERLEXE_ICO)
 
-..\x2p\a2p$(o) : ..\x2p\a2p.c
-	$(CC) -I..\x2p $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\a2p.c
-
-..\x2p\hash$(o) : ..\x2p\hash.c
-	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\hash.c
-
-..\x2p\str$(o) : ..\x2p\str.c
-	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\str.c
-
-..\x2p\util$(o) : ..\x2p\util.c
-	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\util.c
-
-..\x2p\walk$(o) : ..\x2p\walk.c
-	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\walk.c
-
-$(X2P) : $(MINIPERL) $(X2P_OBJ) Extensions
-	$(MINIPERL) -I..\lib ..\x2p\find2perl.PL
-	$(MINIPERL) -I..\lib ..\x2p\s2p.PL
-	$(LINK32) -subsystem:console -out:$@ @<<
-		$(LINK_FLAGS) $(LIBFILES) $(X2P_OBJ)
-<<
-	$(EMBED_EXE_MANI)
+#..\x2p\a2p$(o) : ..\x2p\a2p.c
+#	$(CC) -I..\x2p $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\a2p.c
+#
+#..\x2p\hash$(o) : ..\x2p\hash.c
+#	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\hash.c
+#
+#..\x2p\str$(o) : ..\x2p\str.c
+#	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\str.c
+#
+#..\x2p\util$(o) : ..\x2p\util.c
+#	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\util.c
+#
+#..\x2p\walk$(o) : ..\x2p\walk.c
+#	$(CC) -I..\x2p  $(CFLAGS) $(OBJOUT_FLAG)$@ -c ..\x2p\walk.c
+#
+#$(X2P) : $(MINIPERL) $(X2P_OBJ) Extensions
+#	$(MINIPERL) -I..\lib ..\x2p\find2perl.PL
+#	$(MINIPERL) -I..\lib ..\x2p\s2p.PL
+#	$(LINK32) -subsystem:console -out:$@ @<<
+#		$(LINK_FLAGS) $(LIBFILES) $(X2P_OBJ)
+#<<
+#	$(EMBED_EXE_MANI)
 
 $(MINIDIR)\globals$(o) : $(GENERATED_HEADERS)
 
@@ -1143,7 +1143,7 @@ $(PERLEXE): $(PERLDLL) $(CONFIGPM) $(PERLEXE_OBJ) $(PERLEXE_RES)
 	    $(PERLEXE_OBJ) $(PERLEXE_RES) $(PERLIMPLIB) $(LIBFILES) $(SETARGV_OBJ)
 	$(EMBED_EXE_MANI)
 	copy $(PERLEXE) $(WPERLEXE)
-	$(MINIPERL) -I..\lib bin\exetype.pl $(WPERLEXE) WINDOWS
+#	$(MINIPERL) -I..\lib bin\exetype.pl $(WPERLEXE) WINDOWS
 
 $(PERLEXESTATIC): $(PERLSTATICLIB) $(CONFIGPM) $(PERLEXEST_OBJ) $(PERLEXE_RES)
 	$(LINK32) -out:$@ $(BLINK_FLAGS) \
