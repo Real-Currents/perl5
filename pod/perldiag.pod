@@ -3018,20 +3018,6 @@ an anonymous subroutine, or a reference to a subroutine.
 (W overload) You tried to overload a constant type the overload package is
 unaware of.
 
-=item It is deprecated to use code point 0x%s; the permissible max is 0x%s
-
-(D deprecated) You used a code point that will not be allowed in a
-future perl version, because it is too large.  Unicode only allows code
-points up to 0x10FFFF, but Perl allows much larger ones.  However, the
-largest possible ones break the perl interpreter in some constructs,
-including causing it to hang in a few cases.  The known problem areas
-are in C<tr///>, regular expression pattern matching using quantifiers,
-and as the upper limits in loops.
-
-If your code is to run on various platforms, keep in mind that the upper
-limit depends on the platform.  It is much larger on 64-bit word sizes
-than 32-bit ones.
-
 =item -i used with no filenames on the command line, reading from STDIN
 
 (S inplace) The C<-i> option was passed on the command line, indicating
@@ -6666,14 +6652,6 @@ is deprecated.  See L<perlvar/"$[">.
 form if you wish to use an empty line as the terminator of the
 here-document.
 
-=item Use of %s for non-UTF-8 locale is wrong.  Assuming a UTF-8 locale
-
-(W locale)  You are matching a regular expression using locale rules,
-and the specified construct was encountered.  This construct is only
-valid for UTF-8 locales, which the current locale isn't.  This doesn't
-make sense.  Perl will continue, assuming a Unicode (UTF-8) locale, but
-the results are likely to be wrong.
-
 =item Use of /c modifier is meaningless in s///
 
 (W regexp) You used the /c modifier in a substitution.  The /c
@@ -6684,6 +6662,20 @@ modifier is not presently meaningful in substitutions.
 (W regexp) You used the /c modifier with a regex operand, but didn't
 use the /g modifier.  Currently, /c is meaningful only when /g is
 used.  (This may change in the future.)
+
+=item Use of code point 0x%s is deprecated; the permissible max is 0x%s
+
+(D deprecated) You used a code point that will not be allowed in a
+future perl version, because it is too large.  Unicode only allows code
+points up to 0x10FFFF, but Perl allows much larger ones.  However, the
+largest possible ones break the perl interpreter in some constructs,
+including causing it to hang in a few cases.  The known problem areas
+are in C<tr///>, regular expression pattern matching using quantifiers,
+and as the upper limits in loops.
+
+If your code is to run on various platforms, keep in mind that the upper
+limit depends on the platform.  It is much larger on 64-bit word sizes
+than 32-bit ones.
 
 =item Use of comma-less variable list is deprecated
 
@@ -6705,6 +6697,14 @@ error, so C<:=> can be reclaimed as a new operator in the future.
 
 If you need an empty attribute list, for example in a code generator, add
 a space before the C<=>.
+
+=item Use of %s for non-UTF-8 locale is wrong.  Assuming a UTF-8 locale
+
+(W locale)  You are matching a regular expression using locale rules,
+and the specified construct was encountered.  This construct is only
+valid for UTF-8 locales, which the current locale isn't.  This doesn't
+make sense.  Perl will continue, assuming a Unicode (UTF-8) locale, but
+the results are likely to be wrong.
 
 =item Use of freed value in iteration
 
@@ -6818,6 +6818,14 @@ operators and then you presumably know what you are doing.
 (S experimental::lexical_topic) Lexical $_ is an experimental feature and
 its behavior may change or even be removed in any future release of perl.
 See the explanation under L<perlvar/$_>.
+
+=item Use of strings with code points over 0xFF as arguments to %s
+operator is deprecated
+
+(D deprecated) You tried to use one of the string bitwise operators
+(C<&> or C<|> or C<^> or C<~>) on a string containing a code point over
+0xFF.  The string bitwise operators treat their operands as strings of
+bytes, and values beyond 0xFF are nonsensical in this context.
 
 =item Use of tainted arguments in %s is deprecated
 

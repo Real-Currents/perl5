@@ -303,7 +303,7 @@ use File::Glob qw(:case);
     },
 
     'CPAN::Meta::Requirements' => {
-        'DISTRIBUTION' => 'DAGOLDEN/CPAN-Meta-Requirements-2.133.tar.gz',
+        'DISTRIBUTION' => 'DAGOLDEN/CPAN-Meta-Requirements-2.140.tar.gz',
         'FILES'        => q[cpan/CPAN-Meta-Requirements],
         'EXCLUDED'     => [
             qw(t/00-report-prereqs.t),
@@ -314,7 +314,7 @@ use File::Glob qw(:case);
     },
 
     'CPAN::Meta::YAML' => {
-        'DISTRIBUTION' => 'DAGOLDEN/CPAN-Meta-YAML-0.017-TRIAL.tar.gz',
+        'DISTRIBUTION' => 'DAGOLDEN/CPAN-Meta-YAML-0.018.tar.gz',
         'FILES'        => q[cpan/CPAN-Meta-YAML],
         'EXCLUDED'     => [
             't/00-report-prereqs.t',
@@ -797,7 +797,7 @@ use File::Glob qw(:case);
     },
 
     'Module::CoreList' => {
-        'DISTRIBUTION' => 'BINGOS/Module-CoreList-5.20151120.tar.gz',
+        'DISTRIBUTION' => 'BINGOS/Module-CoreList-5.20151220.tar.gz',
         'FILES'        => q[dist/Module-CoreList],
     },
 
@@ -918,6 +918,7 @@ use File::Glob qw(:case);
         'EXCLUDED' => ['perldoc'],
 
         # https://rt.cpan.org/Ticket/Display.html?id=106798
+        # https://rt.cpan.org/Ticket/Display.html?id=110368
         'CUSTOMIZED'   => [ qw[ lib/Pod/Perldoc.pm ] ],
     },
 
@@ -932,7 +933,7 @@ use File::Glob qw(:case);
     },
 
     'podlators' => {
-        'DISTRIBUTION' => 'RRA/podlators-2.5.3.tar.gz',
+        'DISTRIBUTION' => 'RRA/podlators-4.03.tar.gz',
         'FILES'        => q[cpan/podlators pod/perlpodstyle.pod],
 
         # The perl distribution has pod2man.PL and pod2text.PL,  which are
@@ -1020,7 +1021,7 @@ use File::Glob qw(:case);
     },
 
     'Term::ANSIColor' => {
-        'DISTRIBUTION' => 'RRA/Term-ANSIColor-4.03.tar.gz',
+        'DISTRIBUTION' => 'RRA/Term-ANSIColor-4.04.tar.gz',
         'FILES'        => q[cpan/Term-ANSIColor],
         'EXCLUDED'     => [
             qr{^examples/},

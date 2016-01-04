@@ -12,7 +12,7 @@ use File::Spec::Functions qw(catfile catdir splitdir);
 use vars qw($VERSION @Pagers $Bindir $Pod2man
   $Temp_Files_Created $Temp_File_Lifetime
 );
-$VERSION = '3.25_01'; # patched in perl5.git
+$VERSION = '3.25_02'; # patched in perl5.git
 $VERSION =~ s/_//;
 
 #..........................................................................
@@ -1663,6 +1663,10 @@ sub pagers_guessing {
     elsif ($self->is_dos) {
         push @pagers, qw( less.exe more.com< );
         unshift @pagers, $ENV{PAGER}  if $ENV{PAGER};
+    }
+    elsif ( $self->is_amigaos) {
+        push @pagers, qw( /SYS/Utilities/MultiView /SYS/Utilities/More /C/TYPE );
+        unshift @pagers, "$ENV{PAGER}"  if $ENV{PAGER};
     }
     else {
         if ($self->is_os2) {

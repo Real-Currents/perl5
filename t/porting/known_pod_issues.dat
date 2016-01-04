@@ -83,6 +83,7 @@ File::Findgrep
 File::Map
 File::MMagic
 File::ShareDir
+find(1)
 flock(3)
 fsync(3c)
 Function::Parameters
@@ -273,7 +274,7 @@ pod/perlcygwin.pod	Verbatim line length including indents exceeds 79 by	20
 pod/perldebguts.pod	Verbatim line length including indents exceeds 79 by	27
 pod/perldebtut.pod	Verbatim line length including indents exceeds 79 by	3
 pod/perldtrace.pod	Verbatim line length including indents exceeds 79 by	7
-pod/perlgit.pod	Verbatim line length including indents exceeds 79 by	12
+pod/perlgit.pod	Verbatim line length including indents exceeds 79 by	1
 pod/perlguts.pod	? Should you be using L<...> instead of	1
 pod/perlguts.pod	Verbatim line length including indents exceeds 79 by	1
 pod/perlhack.pod	? Should you be using L<...> instead of	1
@@ -312,4 +313,3 @@ lib/benchmark.pm	Verbatim line length including indents exceeds 79 by	2
 lib/config.pod	? Should you be using L<...> instead of	-1
 lib/extutils/embed.pm	Verbatim line length including indents exceeds 79 by	2
 lib/perl5db.pl	? Should you be using L<...> instead of	1
-lib/pod/text/overstrike.pm	Verbatim line length including indents exceeds 79 by	1

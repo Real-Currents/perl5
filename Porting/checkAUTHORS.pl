@@ -588,6 +588,7 @@ crt\100kiski.net                        perl\100ctweten.amsite.com
 
 dairiki\100dairiki.org                  dairiki at dairiki.org
 dagolden\100cpan.org                    xdaveg\100gmail.com
++                                       xdg\100xdg.me
 damian\100conway.org                    damian\100cs.monash.edu.au
 dan\100sidhe.org                        sugalsd\100lbcc.cc.or.us
 +                                       sugalskd\100osshe.edu
@@ -734,6 +735,7 @@ marnix\100gmail.com                     pttesac!marnix!vanam
 marty+p5p\100kasei.com                  marty\100martian.org
 mats\100sm6sxl.net                      mats\100sm5sxl.net
 mbarbon\100dsi.unive.it                 mattia.barbon\100libero.it
++                                       mattia\100barbon.org
 mcmahon\100ibiblio.org                  mcmahon\100metalab.unc.edu
 me\100davidglasser.net                  glasser\100tang-eleven-seventy-nine.mit.edu
 merijnb\100iloquent.nl                  merijnb\100ms.com

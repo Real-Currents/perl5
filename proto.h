@@ -3341,9 +3341,11 @@ PERL_CALLCONV U32	Perl_to_uni_upper_lc(pTHX_ U32 c)
 			__attribute__warn_unused_result__
 			__attribute__pure__;
 
-PERL_CALLCONV UV	Perl_to_utf8_case(pTHX_ const U8 *p, U8* ustrp, STRLEN *lenp, SV **swashp, const char *normal, const char *special);
+PERL_CALLCONV UV	Perl_to_utf8_case(pTHX_ const U8 *p, U8* ustrp, STRLEN *lenp, SV **swashp, const char *normal, const char *special)
+			__attribute__deprecated__;
 #define PERL_ARGS_ASSERT_TO_UTF8_CASE	\
 	assert(p); assert(ustrp); assert(swashp); assert(normal)
+
 /* PERL_CALLCONV UV	Perl_to_utf8_fold(pTHX_ const U8 *p, U8* ustrp, STRLEN *lenp); */
 #define PERL_ARGS_ASSERT_TO_UTF8_FOLD	\
 	assert(p); assert(ustrp)
@@ -4791,7 +4793,7 @@ STATIC regnode*	S_regpiece(pTHX_ RExC_state_t *pRExC_state, I32 *flagp, U32 dept
 PERL_STATIC_INLINE I32	S_regpposixcc(pTHX_ RExC_state_t *pRExC_state, I32 value, const bool strict);
 #define PERL_ARGS_ASSERT_REGPPOSIXCC	\
 	assert(pRExC_state)
-STATIC void	S_regtail(pTHX_ RExC_state_t *pRExC_state, regnode *p, const regnode *val, U32 depth);
+STATIC void	S_regtail(pTHX_ RExC_state_t * pRExC_state, const regnode * const p, const regnode * const val, const U32 depth);
 #define PERL_ARGS_ASSERT_REGTAIL	\
 	assert(pRExC_state); assert(p); assert(val)
 STATIC void	S_scan_commit(pTHX_ const RExC_state_t *pRExC_state, struct scan_data_t *data, SSize_t *minlenp, int is_inf);
@@ -4853,6 +4855,9 @@ PERL_CALLCONV void	Perl__invlist_dump(pTHX_ PerlIO *file, I32 level, const char*
 	assert(file); assert(indent); assert(invlist)
 #endif
 #if defined(PERL_IN_REGCOMP_C) || defined(PERL_IN_PERL_C) || defined(PERL_IN_UTF8_C)
+PERL_CALLCONV bool	Perl__invlistEQ(pTHX_ SV* const a, SV* const b, const bool complement_b);
+#define PERL_ARGS_ASSERT__INVLISTEQ	\
+	assert(a); assert(b)
 PERL_CALLCONV SV*	Perl__new_invlist_C_array(pTHX_ const UV* const list)
 			__attribute__warn_unused_result__;
 #define PERL_ARGS_ASSERT__NEW_INVLIST_C_ARRAY	\

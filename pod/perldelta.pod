@@ -5,15 +5,15 @@
 [ this is a template for a new perldelta file.  Any text flagged as XXX needs
 to be processed before release. ]
 
-perldelta - what is new for perl v5.23.6
+perldelta - what is new for perl v5.23.7
 
 =head1 DESCRIPTION
 
-This document describes differences between the 5.23.5 release and the 5.23.6
+This document describes differences between the 5.23.6 release and the 5.23.7
 release.
 
-If you are upgrading from an earlier release such as 5.23.4, first read
-L<perl5235delta>, which describes differences between 5.23.4 and 5.23.5.
+If you are upgrading from an earlier release such as 5.23.5, first read
+L<perl5236delta>, which describes differences between 5.23.5 and 5.23.6.
 
 =head1 Notice
 
@@ -37,19 +37,13 @@ L</Selected Bug Fixes> section.
 
 =head1 Incompatible Changes
 
-=head2 Some regular expression patterns that had runtime errors now
-don't compile at all
+XXX For a release on a stable branch, this section aspires to be:
 
-This should have been in the perldelta for 5.23.4, but was omitted.
+    There are no changes intentionally incompatible with 5.XXX.XXX
+    If any exist, they are bugs, and we request that you submit a
+    report.  See L</Reporting Bugs> below.
 
-Almost all Unicode properties using the C<\p{}> and C<\P{}> regular
-expression pattern constructs are now checked for validity at pattern
-compilation time, and invalid ones will cause the program to not
-compile.  In earlier releases, this check was often deferred until run
-time.  Whenever an error check is moved from run- to compile time,
-erroneous code is caught 100% of the time, whereas before it would only
-get caught if and when the offending portion actually gets executed,
-which for unreachable code might be never.
+[ List each incompatible change as a =head2 entry ]
 
 =head1 Deprecations
 
@@ -83,20 +77,6 @@ as an updated module in the L</Modules and Pragmata> section.
 =back
 
 [ List each other deprecation as a =head2 entry ]
-
-=head2 Using code points above the platform's C<IV_MAX> is now
-deprecated
-
-Unicode defines code points in the range C<0..0x10FFFF>.  Some standards
-at one time defined them up to 2**31 - 1, but Perl has allowed them to
-be as high as anything that will fit in a word on the platform being
-used.  However, use of those above the platform's C<IV_MAX> is broken in
-some constructs, notably C<tr///>, regular expression patterns involving
-quantifiers, and in some arithmetic and comparison operations, such as
-being the upper limit of a loop.  Now the use of such code points raises
-a deprecation warning, unless that warning category is turned off.
-C<IV_MAX> is typically 2**31 -1 on 32-bit platforms, and 2**63-1 on
-64-bit ones.
 
 =head1 Performance Enhancements
 
@@ -139,7 +119,11 @@ XXX
 
 =item *
 
-L<XXX> has been upgraded from version A.xx to B.yy.
+L<Module::CoreList> has been upgraded from version 5.20151220 to 5.20160120.
+
+=item *
+
+The F<cpan/podlators/> bundle has been upgraded from version 2.28 to 4.04.
 
 =back
 
@@ -202,11 +186,7 @@ and New Warnings
 
 =item *
 
-L<message|perldiag/"Invalid number '%s' for -C option.">
-
-(F) You supplied a number to the -C option that either has extra leading
-zeroes or overflows perl's unsigned integer representation.
-
+XXX L<message|perldiag/"message">
 
 =back
 
@@ -228,7 +208,9 @@ XXX Changes (i.e. rewording) of diagnostic messages go here
 
 =item *
 
-XXX Describe change here
+Accessing the C<IO> part of a glob as C<FILEHANDLE> instead of C<IO> is no
+longer deprecated.  It is discouraged to encourage uniformity (so that, for
+example, one can grep more easily) but it will not be removed. [perl #127060]
 
 =back
 
@@ -264,7 +246,9 @@ L</Platform Support> section, instead.
 
 =item *
 
-XXX
+F<Configure> no longer probes for F<libnm> by default.  Originally
+this was the "New Math" library, but the name has been re-used by the
+GNOME NetworkManager.  [perl #127131]
 
 =back
 
@@ -329,19 +313,9 @@ L</Modules and Pragmata> section.
 
 =over 4
 
-=item EBCDIC platforms, such as z/OS
+=item XXX-some-platform
 
-UTF-EBCDIC is like UTF-8, but for EBCDIC platforms.  It now has been
-extended so that it can represent code points up to 2 ** 64 - 1 on
-platforms with 64-bit words.  This brings it into parity with UTF-8.
-This enhancement requires an incompatible change to the representation
-of code points in the range 2 ** 30 to 2 ** 31 -1 (the latter was the
-previous maximum representable code point).  This means that a file that
-contains one of these code points, written out with previous versions of
-perl cannot be read in, without conversion, by a perl containing this
-change.  We do not believe any such files are in existence, but if you
-do have one, submit a ticket at L<mailto:perlbug@perl.org>, and we will
-write a conversion script for you.
+XXX
 
 =back
 
@@ -372,11 +346,7 @@ files in F<ext/> and F<lib/> are best summarized in L</Modules and Pragmata>.
 
 =item *
 
-C</...\G/> no longer crashes on utf8 strings. When C<\G> is a fixed number
-of characters from the start of the regex, perl needs to count back that
-many characters from the current C<pos()> position and start matching from
-there. However, it was counting back bytes rather than characters, which
-could lead to panics on utf8 strings.
+XXX
 
 =back
 
@@ -416,7 +386,7 @@ here.
 
 XXX Generate this with:
 
-  perl Porting/acknowledgements.pl v5.23.5..HEAD
+  perl Porting/acknowledgements.pl v5.23.6..HEAD
 
 =head1 Reporting Bugs
 

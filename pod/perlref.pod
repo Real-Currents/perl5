@@ -272,8 +272,9 @@ the IO handle, used for file handles (L<perlfunc/open>), sockets
 (L<perlfunc/socket> and L<perlfunc/socketpair>), and directory
 handles (L<perlfunc/opendir>).  For compatibility with previous
 versions of Perl, C<*foo{FILEHANDLE}> is a synonym for C<*foo{IO}>, though it
-is deprecated as of 5.8.0.  If deprecation warnings are in effect, it will warn
-of its use.
+is discouraged, to encourage a consistent use of one name: IO.  On perls
+between v5.8 and v5.22, it will issue a deprecation warning, but this
+deprecation has since been rescinded.
 
 C<*foo{THING}> returns undef if that particular THING hasn't been used yet,
 except in the case of scalars.  C<*foo{SCALAR}> returns a reference to an
@@ -887,7 +888,7 @@ for obfuscated code:
     # @harry is (1,2,3)
 
     my $type = ref $thingy;
-    ($type ? $type == 'ARRAY' ? \@foo : \$bar : $baz) = $thingy;
+    ($type ? $type eq 'ARRAY' ? \@foo : \$bar : $baz) = $thingy;
 
 The C<foreach> loop can also take a reference constructor for its loop
 variable, though the syntax is limited to one of the following, with an
@@ -906,7 +907,7 @@ arrays-of-arrays, or arrays-of-hashes:
     }
 
     foreach \my %h (@array_of_hashes) {
-        $h{gelastic}++ if $h{type} == 'funny';
+        $h{gelastic}++ if $h{type} eq 'funny';
     }
 
 B<CAVEAT:> Aliasing does not work correctly with closures.  If you try to

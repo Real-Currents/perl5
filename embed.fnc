@@ -1170,7 +1170,7 @@ Ap	|SV*	|regclass_swash	|NULLOK const regexp *prog \
 				|NULLOK SV **listsvp|NULLOK SV **altsvp
 #if defined(PERL_IN_REGCOMP_C) || defined(PERL_IN_PERL_C) || defined(PERL_IN_UTF8_C)
 AMpR	|SV*	|_new_invlist_C_array|NN const UV* const list
-: Not used currently: EXMs	|bool	|_invlistEQ	|NN SV* const a|NN SV* const b|const bool complement_b
+EXMp	|bool	|_invlistEQ	|NN SV* const a|NN SV* const b|const bool complement_b
 #endif
 Ap	|I32	|pregexec	|NN REGEXP * const prog|NN char* stringarg \
 				|NN char* strend|NN char* strbeg \
@@ -1279,7 +1279,7 @@ Apmb	|void	|save_freepv	|NULLOK char* pv
 Ap	|void	|save_generic_svref|NN SV** sptr
 Ap	|void	|save_generic_pvref|NN char** str
 Ap	|void	|save_shared_pvref|NN char** str
-Ap	|void	|save_gp	|NN GV* gv|I32 empty
+Adp	|void	|save_gp	|NN GV* gv|I32 empty
 Ap	|HV*	|save_hash	|NN GV* gv
 Ap	|void	|save_hints
 Amp	|void	|save_helem	|NN HV *hv|NN SV *key|NN SV **sptr
@@ -1591,7 +1591,7 @@ EXMp	|void	|_invlist_dump	|NN PerlIO *file|I32 level   \
 #endif
 Ap	|void	|taint_env
 Ap	|void	|taint_proper	|NULLOK const char* f|NN const char *const s
-Apd	|UV	|to_utf8_case	|NN const U8 *p					\
+ApdD	|UV	|to_utf8_case	|NN const U8 *p					\
 				|NN U8* ustrp					\
 				|NULLOK STRLEN *lenp				\
 				|NN SV **swashp					\
@@ -2175,8 +2175,10 @@ Es	|bool	|grok_bslash_N	|NN RExC_state_t *pRExC_state		    \
 				|const U32 depth
 Es	|void	|reginsert	|NN RExC_state_t *pRExC_state \
 				|U8 op|NN regnode *opnd|U32 depth
-Es	|void	|regtail	|NN RExC_state_t *pRExC_state \
-				|NN regnode *p|NN const regnode *val|U32 depth
+Es	|void	|regtail	|NN RExC_state_t * pRExC_state		    \
+				|NN const regnode * const p		    \
+				|NN const regnode * const val		    \
+				|const U32 depth
 Es	|SV *	|reg_scan_name	|NN RExC_state_t *pRExC_state \
 				|U32 flags
 Es	|U32	|join_exact	|NN RExC_state_t *pRExC_state \
