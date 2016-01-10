@@ -94,6 +94,7 @@ ext.libs
 .exists
 MYMETA.*
 
+/cpan
 /miniperl
 /perl
 
