@@ -141,8 +141,6 @@ cpan/bignum/lib/bignum.pm		bignum
 cpan/bignum/lib/bigrat.pm		bigrat
 cpan/bignum/lib/Math/BigFloat/Trace.pm	bignum tracing
 cpan/bignum/lib/Math/BigInt/Trace.pm	bignum tracing
-cpan/bignum/t/auth-bigint-hex.t		See if bignum works
-cpan/bignum/t/auth-bigint-oct.t		See if bignum works
 cpan/bignum/t/big_e_pi.t		See if bignum exports e() and PI()
 cpan/bignum/t/bigexp.t			See if bignum works
 cpan/bignum/t/bigint.t			See if bigint works
@@ -1654,8 +1652,6 @@ cpan/Math-BigInt/t/bigints.t		See if BigInt.pm works
 cpan/Math-BigInt/t/biglog.t		Test the log function
 cpan/Math-BigInt/t/big_pi_e.t		test bpi() and bexp()
 cpan/Math-BigInt/t/bigroot.t		Test the broot function
-cpan/Math-BigInt/t/blog-mbf.t		Math::BigInt tests
-cpan/Math-BigInt/t/blog-mbi.t		Math::BigInt tests
 cpan/Math-BigInt/t/calling.t		Test calling conventions
 cpan/Math-BigInt/t/config.t		Test Math::BigInt->config()
 cpan/Math-BigInt/t/constant.t		Test Math::BigInt/BigFloat under :constant
@@ -1866,7 +1862,6 @@ cpan/Pod-Escapes/t/10_main.t		test Pod::Escapes
 cpan/Pod-Escapes/t/15_name2charnum.t	test Pod::Escapes
 cpan/podlators/bin/pod2man			Translator to turn pod into manpage
 cpan/podlators/bin/pod2text			Translator to turn pod into text
-cpan/podlators/Changes				podlators release notes
 cpan/podlators/lib/Pod/Man.pm			Convert POD data to *roff
 cpan/podlators/lib/Pod/ParseLink.pm		Perl an L<> formatting code in POD text
 cpan/podlators/lib/Pod/Text/Color.pm		Convert POD data to color ASCII text
@@ -1916,7 +1911,6 @@ cpan/podlators/t/text/overstrike.t			podlators test
 cpan/podlators/t/text/perlio.t			podlators test
 cpan/podlators/t/text/termcap.t			podlators test
 cpan/podlators/t/text/utf8.t			podlators test
-cpan/podlators/VERSION				podlators distribution version
 cpan/Pod-Parser/lib/Pod/Find.pm			find POD documents in directory trees
 cpan/Pod-Parser/lib/Pod/InputObjects.pm		Pod-Parser - define objects for input streams
 cpan/Pod-Parser/lib/Pod/Parser.pm		Pod-Parser - define base class for parsing POD
@@ -5593,6 +5587,7 @@ t/uni/universal.t		See if Unicode in calls to UNIVERSAL works
 t/uni/upper.t			See if Unicode casing works
 t/uni/variables.t		See that the rules for variable names work
 t/uni/write.t			See if Unicode formats work
+t/win32/crypt.t			Test Win32 crypt for compatibility
 t/win32/fs.t			Test Win32 link for compatibility
 t/win32/popen.t			Test for stdout races in backticks, etc
 t/win32/runenv.t		Test if Win* perl honors its env variables

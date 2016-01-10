@@ -184,10 +184,11 @@ use File::Glob qw(:case);
     },
 
     'bignum' => {
-        'DISTRIBUTION' => 'PJACKLAM/bignum-0.41.tar.gz',
+        'DISTRIBUTION' => 'PJACKLAM/bignum-0.42.tar.gz',
         'FILES'        => q[cpan/bignum],
         'EXCLUDED'     => [
             qr{^inc/Module/},
+            qr{^t/author-},
             qw( t/00sig.t
                 t/01load.t
                 t/02pod.t
@@ -484,6 +485,8 @@ use File::Glob qw(:case);
             qq[t/vstrings.t],
         # Upstreamed as https://github.com/Perl-Toolchain-Gang/ExtUtils-MakeMaker/commit/dd1e236ab
             qq[lib/ExtUtils/MM_VMS.pm],
+        # Not yet submitted
+            qq[t/lib/MakeMaker/Test/NoXS.pm],
         ],
     },
 
@@ -674,7 +677,7 @@ use File::Glob qw(:case);
     },
 
     'libnet' => {
-        'DISTRIBUTION' => 'SHAY/libnet-3.07.tar.gz',
+        'DISTRIBUTION' => 'SHAY/libnet-3.08.tar.gz',
         'FILES'        => q[cpan/libnet],
         'EXCLUDED'     => [
             qw( Configure
@@ -721,11 +724,12 @@ use File::Glob qw(:case);
     },
 
     'Math::BigInt' => {
-        'DISTRIBUTION' => 'PJACKLAM/Math-BigInt-1.999710.tar.gz',
+        'DISTRIBUTION' => 'PJACKLAM/Math-BigInt-1.999715.tar.gz',
         'FILES'        => q[cpan/Math-BigInt],
         'EXCLUDED'     => [
             qr{^inc/},
             qr{^examples/},
+            qr{^t/author-},
             qw( t/00sig.t
                 t/01load.t
                 t/02pod.t
@@ -735,7 +739,7 @@ use File::Glob qw(:case);
     },
 
     'Math::BigInt::FastCalc' => {
-        'DISTRIBUTION' => 'PJACKLAM/Math-BigInt-FastCalc-0.38.tar.gz',
+        'DISTRIBUTION' => 'PJACKLAM/Math-BigInt-FastCalc-0.40.tar.gz',
         'FILES'        => q[cpan/Math-BigInt-FastCalc],
         'EXCLUDED'     => [
             qr{^inc/},
@@ -758,7 +762,7 @@ use File::Glob qw(:case);
     },
 
     'Math::BigRat' => {
-        'DISTRIBUTION' => 'PJACKLAM/Math-BigRat-0.260801.tar.gz',
+        'DISTRIBUTION' => 'PJACKLAM/Math-BigRat-0.260802.tar.gz',
         'FILES'        => q[cpan/Math-BigRat],
         'EXCLUDED'     => [
             qr{^inc/},
@@ -766,6 +770,7 @@ use File::Glob qw(:case);
                 t/01load.t
                 t/02pod.t
                 t/03podcov.t
+                t/blog-mbr.t
                 ),
         ],
         'CUSTOMIZED'   => [
@@ -928,12 +933,12 @@ use File::Glob qw(:case);
     },
 
     'Pod::Usage' => {
-        'DISTRIBUTION' => 'MAREKR/Pod-Usage-1.67.tar.gz',
+        'DISTRIBUTION' => 'MAREKR/Pod-Usage-1.68.tar.gz',
         'FILES'        => q[cpan/Pod-Usage],
     },
 
     'podlators' => {
-        'DISTRIBUTION' => 'RRA/podlators-4.03.tar.gz',
+        'DISTRIBUTION' => 'RRA/podlators-4.04.tar.gz',
         'FILES'        => q[cpan/podlators pod/perlpodstyle.pod],
 
         # The perl distribution has pod2man.PL and pod2text.PL,  which are
@@ -1055,16 +1060,13 @@ use File::Glob qw(:case);
     },
 
     'Test::Harness' => {
-        'DISTRIBUTION' => 'LEONT/Test-Harness-3.35.tar.gz',
+        'DISTRIBUTION' => 'LEONT/Test-Harness-3.36.tar.gz',
         'FILES'        => q[cpan/Test-Harness],
         'EXCLUDED'     => [
             qr{^examples/},
-            qr{^inc/},
-            qr{^t/lib/Test/},
             qr{^xt/},
             qw( Changes-2.64
                 MANIFEST.CUMMULATIVE
-                NotBuild.PL
                 HACKING.pod
                 perlcriticrc
                 t/000-load.t
@@ -1220,8 +1222,15 @@ use File::Glob qw(:case);
     },
 
     'Unicode::Normalize' => {
-        'DISTRIBUTION' => 'KHW/Unicode-Normalize-1.24.tar.gz',
+        'DISTRIBUTION' => 'KHW/Unicode-Normalize-1.25.tar.gz',
         'FILES'        => q[cpan/Unicode-Normalize],
+        'EXCLUDED'     => [
+            qw( MANIFEST.N
+                Normalize.pmN
+                disableXS
+                enableXS
+                ),
+        ],
     },
 
     'version' => {

@@ -86,6 +86,13 @@ for test I<foo> falls outside the range 100..105.
 
 =item *
 
+--compact=<Iperl>
+
+Display the results for a single perl executable in a compact form.
+Which perl to display is specified in the same manner as C<--norm>.
+
+=item *
+
 --debug
 
 Enable verbose debugging output.
@@ -228,6 +235,8 @@ usage: $0 [options] perl[=label] ...
   --bisect=f,min,max run a single test against one perl and exit with a
                        zero status if the named field is in the specified
                        range; exit 1 otherwise.
+  --compact=perl     Display the results of a single perl in compact form.
+                     Which perl specified like --norm
   --debug            Enable verbose debugging output.
   --fields=a,b,c     Display only the specified fields (e.g. Ir,Ir_m,Ir_mm).
   --grindargs=foo    Optional command-line args to pass to cachegrind.
@@ -265,6 +274,7 @@ my %OPTS = (
     average   => 0,
     benchfile => 't/perf/benchmarks',
     bisect    => undef,
+    compact   => undef,
     debug     => 0,
     grindargs => '',
     fields    => undef,
@@ -288,6 +298,7 @@ my %OPTS = (
         'average'     => \$OPTS{average},
         'benchfile=s' => \$OPTS{benchfile},
         'bisect=s'    => \$OPTS{bisect},
+        'compact=s'   => \$OPTS{compact},
         'debug'       => \$OPTS{debug},
         'grindargs=s' => \$OPTS{grindargs},
         'help'        => \$OPTS{help},
@@ -417,6 +428,8 @@ sub filter_tests {
 
 
 # Read in the test file, and filter out any tests excluded by $OPTS{tests}
+# return a hash ref { testname => { test }, ... }
+# and an array ref of the original test names order,
 
 sub read_tests_file {
     my ($file) = @_;
@@ -427,9 +440,14 @@ sub read_tests_file {
         die "Error: can't read '$file': $!\n";
     }
 
+    my @orig_order;
+    for (my $i=0; $i < @$ta; $i += 2) {
+        push @orig_order, $ta->[$i];
+    }
+
     my $t = { @$ta };
     filter_tests($t);
-    return $t;
+    return $t, \@orig_order;
 }
 
 
@@ -547,7 +565,7 @@ sub parse_cachegrind {
 sub do_grind {
     my ($perl_args) = @_; # the residue of @ARGV after option processing
 
-    my ($loop_counts, $perls, $results, $tests);
+    my ($loop_counts, $perls, $results, $tests, $order);
     my ($bisect_field, $bisect_min, $bisect_max);
 
     if (defined $OPTS{bisect}) {
@@ -576,11 +594,15 @@ sub do_grind {
             die "Error: unsupported version $hash->{version} in file"
               . "'$OPTS{read}' (too new)\n";
         }
-        ($loop_counts, $perls, $results, $tests) =
-            @$hash{qw(loop_counts perls results tests)};
+        ($loop_counts, $perls, $results, $tests, $order) =
+            @$hash{qw(loop_counts perls results tests order)};
 
         filter_tests($results);
         filter_tests($tests);
+
+        if (!$order) {
+            $order = [ sort keys %$tests ];
+        }
     }
     else {
         # How many times to execute the loop for the two trials. The lower
@@ -589,14 +611,14 @@ sub do_grind {
         # branch misses after that
         $loop_counts = [10, 20];
 
-        $tests = read_tests_file($OPTS{benchfile});
+        ($tests, $order) = read_tests_file($OPTS{benchfile});
         die "Error: only a single test may be specified with --bisect\n"
             if defined $OPTS{bisect} and keys %$tests != 1;
 
         $perls = [ process_perls(@$perl_args) ];
 
 
-        $results = grind_run($tests, $perls, $loop_counts);
+        $results = grind_run($tests, $order, $perls, $loop_counts);
     }
 
     # now that we have a list of perls, use it to process the
@@ -608,6 +630,10 @@ sub do_grind {
                 select_a_perl($OPTS{'sort-perl'}, $perls, "--sort");
     }
 
+    if (defined $OPTS{'compact'}) {
+        $OPTS{'compact'} =
+                select_a_perl($OPTS{'compact'}, $perls, "--compact");
+    }
     if (defined $OPTS{write}) {
         my $json = JSON::PP::encode_json({
                     version      => $FORMAT_VERSION,
@@ -615,6 +641,7 @@ sub do_grind {
                     perls        => $perls,
                     results      => $results,
                     tests        => $tests,
+                    order        => $order,
                 });
 
         open my $out, '>:encoding(UTF-8)', $OPTS{write}
@@ -639,8 +666,12 @@ sub do_grind {
             exit 0 if $bisect_min <= $c and $c <= $bisect_max;
             exit 1;
         }
+        elsif (defined $OPTS{compact}) {
+            grind_print_compact($processed, $averages, $OPTS{compact},
+                                $perls, $tests, $order);
+        }
         else {
-            grind_print($processed, $averages, $perls, $tests);
+            grind_print($processed, $averages, $perls, $tests, $order);
         }
     }
 }
@@ -651,13 +682,13 @@ sub do_grind {
 # Return a hash ref suitable for input to grind_process()
 
 sub grind_run {
-    my ($tests, $perls, $counts) = @_;
+    my ($tests, $order, $perls, $counts) = @_;
 
     # Build a list of all the jobs to run
 
     my @jobs;
 
-    for my $test (sort keys %$tests) {
+    for my $test (grep $tests->{$_}, @$order) {
 
         # Create two test progs: one with an empty loop and one with code.
         # Note that the empty loop is actually '{1;}' rather than '{}';
@@ -983,28 +1014,11 @@ sub grind_process {
 }
 
 
-# grind_print(): display the tabulated results of all the cachegrinds.
-#
-# Arguments are of the form:
-#    $results->{benchmark_name}{perl_name}{field_name} = N
-#    $averages->{perl_name}{field_name} = M
-#    $perls = [ [ perl-exe, perl-label ], ... ]
-#    $tests->{test_name}{desc => ..., ...}
 
-sub grind_print {
-    my ($results, $averages, $perls, $tests) = @_;
+# print a standard blurb at the start of the grind display
 
-    my @perl_names = map $_->[0], @$perls;
-    my %perl_labels;
-    $perl_labels{$_->[0]} = $_->[1] for @$perls;
-
-    my $field_label_width = 6;
-    # Calculate the width to display for each column.
-    my $min_width = $OPTS{raw} ? 8 : 6;
-    my @widths = map { length($_) < $min_width ? $min_width : length($_) }
-                            @perl_labels{@perl_names};
-
-    # Print header.
+sub grind_blurb {
+    my ($perls) = @_;
 
     print <<EOF;
 Key:
@@ -1026,20 +1040,25 @@ EOF
     else {
         print <<EOF;
 The numbers represent relative counts per loop iteration, compared to
-$perl_labels{$perl_names[0]} at 100.0%.
+$perls->[$OPTS{norm}][1] at 100.0%.
 Higher is better: for example, using half as many instructions gives 200%,
 while using twice as many gives 50%.
 EOF
     }
+}
 
-    # Populate @test_names with the tests in sorted order.
 
-    my @test_names;
+# return a sorted list of the test names, plus 'AVERAGE'
+
+sub sorted_test_names {
+    my ($results, $order, $perls) = @_;
+
+    my @names;
     unless ($OPTS{average}) {
         if (defined $OPTS{'sort-field'}) {
             my ($field, $perlix) = @OPTS{'sort-field', 'sort-perl'};
             my $perl = $perls->[$perlix][0];
-            @test_names = sort
+            @names = sort
                 {
                         $results->{$a}{$perl}{$field}
                     <=> $results->{$b}{$perl}{$field}
@@ -1047,12 +1066,41 @@ EOF
                 keys %$results;
         }
         else {
-            @test_names = sort(keys %$results);
+            @names = grep $results->{$_}, @$order;
         }
     }
 
     # No point in displaying average for only one test.
-    push @test_names,  'AVERAGE' unless @test_names == 1;
+    push @names,  'AVERAGE' unless @names == 1;
+    @names;
+}
+
+
+# grind_print(): display the tabulated results of all the cachegrinds.
+#
+# Arguments are of the form:
+#    $results->{benchmark_name}{perl_name}{field_name} = N
+#    $averages->{perl_name}{field_name} = M
+#    $perls = [ [ perl-exe, perl-label ], ... ]
+#    $tests->{test_name}{desc => ..., ...}
+
+sub grind_print {
+    my ($results, $averages, $perls, $tests, $order) = @_;
+
+    my @perl_names = map $_->[0], @$perls;
+    my %perl_labels;
+    $perl_labels{$_->[0]} = $_->[1] for @$perls;
+
+    my $field_label_width = 6;
+    # Calculate the width to display for each column.
+    my $min_width = $OPTS{raw} ? 8 : 6;
+    my @widths = map { length($_) < $min_width ? $min_width : length($_) }
+                            @perl_labels{@perl_names};
+
+    # Print standard header.
+    grind_blurb($perls);
+
+    my @test_names = sorted_test_names($results, $order, $perls);
 
     # If only a single field is to be displayed, use a more compact
     # format with only a single line of output per test.
@@ -1143,6 +1191,72 @@ EOF
             }
             print "\n";
         }
+    }
+}
+
+
+
+# grind_print_compact(): like grind_print(), but display a single perl
+# in a compact form. Has an additional arg, $which_perl, which specifies
+# which perl to display.
+#
+# Arguments are of the form:
+#    $results->{benchmark_name}{perl_name}{field_name} = N
+#    $averages->{perl_name}{field_name} = M
+#    $perls = [ [ perl-exe, perl-label ], ... ]
+#    $tests->{test_name}{desc => ..., ...}
+
+sub grind_print_compact {
+    my ($results, $averages, $which_perl, $perls, $tests, $order) = @_;
+
+
+    # the width to display for each column.
+    my $width = $OPTS{raw} ? 7 : 6;
+
+    # Print standard header.
+    grind_blurb($perls);
+
+    print "\nResults for $perls->[$which_perl][1]\n\n";
+
+    my @test_names = sorted_test_names($results, $order, $perls);
+
+    # Dump the results for each test.
+
+     my @fields = qw( Ir Dr Dw
+                      COND IND
+                      COND_m IND_m
+                      Ir_m1 Dr_m1 Dw_m1
+                      Ir_mm Dr_mm Dw_mm
+                    );
+    if ($OPTS{fields}) {
+        @fields = grep exists $OPTS{fields}{$_}, @fields;
+    }
+
+    printf " %*s", $width, $_      for @fields;
+    print "\n";
+    printf " %*s", $width, '------' for @fields;
+    print "\n";
+
+    for my $test_name (@test_names) {
+        my $doing_ave = ($test_name eq 'AVERAGE');
+        my $res = $doing_ave ? $averages : $results->{$test_name};
+        $res = $res->{$perls->[$which_perl][0]};
+
+        for my $field (@fields) {
+            my $p = $res->{$field};
+            if (!defined $p) {
+                printf " %*s", $width, '-';
+            }
+            elsif ($OPTS{raw}) {
+                printf " %*.1f", $width, $p;
+            }
+            else {
+                printf " %*.2f", $width, $p * 100;
+            }
+
+        }
+
+        print "  $test_name\n";
     }
 }
 
